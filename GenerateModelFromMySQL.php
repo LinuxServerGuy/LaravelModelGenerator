@@ -24,7 +24,7 @@ class GenerateModelFromMySQL extends Command
 	/**
 	 * Create a new command instance.
 	 *
-	 * @return void
+	 * @return \App\Console\Commands\GenerateModelFromMySQL
 	 */
 	public function __construct()
 	{
@@ -82,13 +82,13 @@ class GenerateModelFromMySQL extends Command
 			$solo_relations  = $this->getTableFieldsSoloRelations($database_name, $table->name);
 			$multi_relations = $this->getTableFieldsMultiRelations($database_name, $table->name);
 
-			$template = preg_replace('/#CLASS_NAME#/', $this->camelCase1($table_name), $template);
-			$template = preg_replace('/#TABLE_NAME#/', $table_name, $template);
+			$template = preg_replace('/#CLASS_NAME#/', $this->camelCase1($table->name), $template);
+			$template = preg_replace('/#TABLE_NAME#/', $table->name, $template);
 			$template = preg_replace('/#FILLABLE#/', $this->generateFillable($fields), $template);
 			$template = preg_replace('/#SOLO_RELATIONAL_FUNCTIONS#/', $this->GenerateSoloRelations($solo_relations), $template);
 			$template = preg_replace('/#MULTI_RELATIONAL_FUNCTIONS#/', $this->GenerateMultiRelations($multi_relations), $template);
 
-			file_put_contents('app/' . $this->camelCase1($table_name) . '.php', $template);
+			file_put_contents('app/' . $this->camelCase1($table->name) . '.php', $template);
 
 		}
 
@@ -136,7 +136,6 @@ class GenerateModelFromMySQL extends Command
 		foreach ($fields AS $field)
 		{
 			$camel_field = $this->camelCase1($field->REFERENCED_TABLE_NAME);
-			//TODO: Use actual key here
 			$solo_relations .= "\tpublic function {$camel_field}()
 \t{
 \t\treturn \$this->hasOne('App\\{$camel_field}', '{$field->REFERENCED_COLUMN_NAME}', '{$field->COLUMN_NAME}');
@@ -152,7 +151,6 @@ class GenerateModelFromMySQL extends Command
 		foreach ($fields AS $field)
 		{
 			$camel_field = $this->camelCase1($field->TABLE_NAME);
-			//TODO: Use actual key here
 			$multi_relations .= "\tpublic function {$camel_field}s()
 \t{
 \t\treturn \$this->hasMany('App\\{$camel_field}', '{$field->COLUMN_NAME}', '{$field->REFERENCED_COLUMN_NAME}');
@@ -164,7 +162,7 @@ class GenerateModelFromMySQL extends Command
 	//Camel case with init cap
 	private function camelCase1($string, array $noStrip = [])
 	{
-// non-alpha and non-numeric characters become spaces
+		// non-alpha and non-numeric characters become spaces
 		$string = preg_replace('/[^a-z0-9' . implode("", $noStrip) . ']+/i', ' ', $string);
 		$string = trim($string);
 		// uppercase the first character of each word
@@ -177,7 +175,7 @@ class GenerateModelFromMySQL extends Command
 	//Camel case with no init cap
 	private function camelCase2($string, array $noStrip = [])
 	{
-// non-alpha and non-numeric characters become spaces
+		// non-alpha and non-numeric characters become spaces
 		$string = preg_replace('/[^a-z0-9' . implode("", $noStrip) . ']+/i', ' ', $string);
 		$string = trim($string);
 		// uppercase the first character of each word
