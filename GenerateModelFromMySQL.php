@@ -88,8 +88,7 @@ class GenerateModelFromMySQL extends Command
 			$template = preg_replace('/#SOLO_RELATIONAL_FUNCTIONS#/', $this->GenerateSoloRelations($solo_relations), $template);
 			$template = preg_replace('/#MULTI_RELATIONAL_FUNCTIONS#/', $this->GenerateMultiRelations($multi_relations), $template);
 
-			//Check if file exists first
-			//file_put_contents('app/' . $this->camelCase1($table_name) . '.php', $template);
+			file_put_contents('app/' . $this->camelCase1($table_name) . '.php', $template);
 
 		}
 
