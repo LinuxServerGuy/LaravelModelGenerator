@@ -1,5 +1,5 @@
 # Laravel Model Generator (For L5)
-Generates Laravel 5 models from existing MySQL database schema.
+###Generates Laravel 5 models from existing MySQL database schema.
 
 Copy GenerateModelFromMYSQL.php to app/Console/Commands/
 
