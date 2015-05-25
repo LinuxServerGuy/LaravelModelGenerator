@@ -10,7 +10,7 @@ Edit app/Console/Kernel.php, add the following line to the $commands[] array:
 
 Set up your MySQL connection within Laravel, then use the generator as follows:
 ```
-php artisan generate:model \<database\>.\<table\>
+php artisan generate:model <database>.<table>
 ```
 
 Table param accepts the * wildcard.
