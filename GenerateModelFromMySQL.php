@@ -250,9 +250,9 @@ use Illuminate\Database\Eloquent\Model;
 class #CLASS_NAME# extends Model {
 
 	protected $table = \'#TABLE_NAME#\';
-	//public $timestamps = false ;
+	public $timestamps = false ;
 
-	protected $fillable = #FILLABLE# ;
+	public $fillable = #FILLABLE# ;
 
 	#SOLO_RELATIONAL_FUNCTIONS#
 
