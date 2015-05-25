@@ -14,3 +14,6 @@ php artisan generate:model <database>.<table>
 ```
 
 Table param accepts the * wildcard.
+
+After the models are generated, uncomment the required $fillable fields.
+Timestamps field is included, but probably not required when the model is generated in the MySQL->Laravel direction.
