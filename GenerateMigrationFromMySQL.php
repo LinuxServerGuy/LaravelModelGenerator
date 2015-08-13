@@ -129,10 +129,12 @@ class GenerateMigrationFromMySQL extends Command
 							ORDER BY columns.ORDINAL_POSITION");
 
 		$descriptors = '' ;
+		$mysql_hacks = '' ;
 
 		foreach($fields AS $field)
 		{
 			$descriptor = "\t\t\$table->" ;
+			$hack = false ;
 
 			switch(strtoupper($field->DATA_TYPE))
 			{
@@ -141,6 +143,16 @@ class GenerateMigrationFromMySQL extends Command
 					break ;
 				case 'BLOB' :
 					$descriptor .= "binary('{$field->COLUMN_NAME}')" ;
+					break ;
+				case 'LONGBLOB' :
+					$descriptor = '' ;
+					$hack = true ;
+					$mysql_hacks .= "\tDB::statement('ALTER TABLE {$database_name}.{$table_name} ADD {$field->COLUMN_NAME} LONGBLOB') ;" ;
+					break ;
+				case 'MEDIUMBLOB' :
+					$descriptor = '' ;
+					$hack = true ;
+					$mysql_hacks .= "\tDB::statement('ALTER TABLE {$database_name}.{$table_name} ADD {$field->COLUMN_NAME} MEDIUMBLOB') ;" ;
 					break ;
 				case 'BOOLEAN' :
 					$descriptor .= "boolean('{$field->COLUMN_NAME}')" ;
@@ -209,13 +221,19 @@ class GenerateMigrationFromMySQL extends Command
 					break ;
 			}
 
-			$descriptor .= $this->generateNullable($field) ;
-			$descriptor .= $this->generateFieldUniqueness($field) ;
-			$descriptor .= $this->generateDefault($field) ;
+			if(!$hack)
+			{
+				$descriptor .= $this->generateNullable($field);
+				$descriptor .= $this->generateFieldUniqueness($field);
+				$descriptor .= $this->generateDefault($field);
+			}
 			$descriptors .= $descriptor . " ;\n" ;
 		}
 
 		$descriptors .= "\n" ;
+
+		if(!empty($mysql_hacks))
+			$descriptors .= "\n{$mysql_hacks}\n" ;
 
 		return $descriptors ;
 
