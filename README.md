@@ -1,4 +1,4 @@
-# Laravel Model&Migrations Generator - For Laravel 5.x
+# Laravel Model & Migration Generator
 ###Generates Laravel 5 models and migrations from existing MySQL database schema.
 
 Copy GenerateModelFromMySQL.php and GenerateMigrationFromMySQL.php to app/Console/Commands/
