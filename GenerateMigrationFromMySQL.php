@@ -78,8 +78,7 @@ class GenerateMigrationFromMySQL extends Command
 			$template = preg_replace('/#FIELD_DESCRIPTORS#/', $this->generateFieldDescriptors($database_name, $table_name), $template) ;
 			$template = preg_replace('/#FOREIGN_KEYS#/', $this->generateForeignKeys($database_name, $table_name), $template);
 
-			echo $template ;
-			//file_put_contents('database/migrations/' . date('Y_m_d_His_') . 'create_' . $this->camelCase1($table->name) . '_table.php', $template);
+			file_put_contents('database/migrations/' . date('Y_m_d_His_') . 'create_' . $this->camelCase1($table->name) . '_table.php', $template);
 
 		}
 
@@ -231,7 +230,7 @@ class GenerateMigrationFromMySQL extends Command
 								AND REFERENCED_COLUMN_NAME IS NOT NULL");
 
 		if(empty($fields))
-			return 'no fields' ;
+			return '' ;
 
 		$foreign_keys = "\t/**  Foreign Key Relations  **/\n";
 
