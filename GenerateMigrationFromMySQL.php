@@ -254,7 +254,7 @@ class GenerateMigrationFromMySQL extends Command
 
 		foreach($fields AS $field)
 		{
-			$foreign_keys .= "\n\t\t\$table->foreign('{$field->COLUMN_NAME}')->references('{$field->REFERENCED_TABLE_NAME}')->on('{$field->REFERENCED_COLUMN_NAME}') ;"; //->onDelete('cascade')" ;
+			$foreign_keys .= "\n\t\t\$table->index('{$field->COLUMN_NAME}') ; \$table->foreign('{$field->COLUMN_NAME}')->references('{$field->REFERENCED_TABLE_NAME}')->on('{$field->REFERENCED_COLUMN_NAME}') ;"; //->onDelete('cascade')" ;
 		}
 
 		return $foreign_keys ;
