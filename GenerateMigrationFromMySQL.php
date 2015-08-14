@@ -178,7 +178,7 @@ class GenerateMigrationFromMySQL extends Command
 				case 'FLOAT' :
 					$descriptor .= "float('{$field->COLUMN_NAME}')" ;
 					break ;
-				case 'INT' :
+				case 'INT' : //TODO: If this is a foreign key, make it unsigned to match the AI field
 					$descriptor .= "integer('{$field->COLUMN_NAME}')" ;
 					break ;
 				case 'INTEGER' :
@@ -350,9 +350,8 @@ class Create#CLASS_NAME#Table extends Migration
         Schema::create(\'#TABLE_NAME#\', function (Blueprint $table) {
             $table->increments(\'id\');
 #FIELD_DESCRIPTORS#
-
-#FOREIGN_KEYS#
         });
+#FOREIGN_KEYS#
     }
 
     /**
