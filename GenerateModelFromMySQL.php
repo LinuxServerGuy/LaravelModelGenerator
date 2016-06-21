@@ -228,7 +228,7 @@ class GenerateModelFromMySQL extends Command
 		//Field comments, if available
 		foreach ($table_fields AS $field)
 		{
-			if($field == 'id')
+			if($field->COLUMN_NAME == 'id')
 				$fillable .= "\t\t\t\t//'{$field->COLUMN_NAME}',";
 			else
 				$fillable .= "\t\t\t\t'{$field->COLUMN_NAME}',";
