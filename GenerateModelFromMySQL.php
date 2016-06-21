@@ -228,7 +228,10 @@ class GenerateModelFromMySQL extends Command
 		//Field comments, if available
 		foreach ($table_fields AS $field)
 		{
-			$fillable .= "\t\t\t\t//'{$field->COLUMN_NAME}',";
+			if($field == 'id')
+				$fillable .= "\t\t\t\t//'{$field->COLUMN_NAME}',";
+			else
+				$fillable .= "\t\t\t\t'{$field->COLUMN_NAME}',";
 			if (!empty($field->COLUMN_COMMENT))
 				$fillable .= "\t/*{$field->COLUMN_COMMENT}*/";
 			$fillable .= "\n";
