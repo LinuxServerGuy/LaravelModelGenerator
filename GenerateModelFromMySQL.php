@@ -75,10 +75,6 @@ class GenerateModelFromMySQL extends Command
 			exit();
 		}
 
-		//Create 'Models' directory it does not already exist
-		if (!file_exists('app/Models'))
-			mkdir('app/Models', 0777, true);
-
 		foreach ($tables AS $table)
 		{
 			$template = $this->template();
@@ -95,7 +91,7 @@ class GenerateModelFromMySQL extends Command
 			$template = preg_replace('/#IMPORT_SOFT_DELETE#/', $this->useSofDelete($fields, 'import'), $template);
 			$template = preg_replace('/#USE_SOFT_DELETE#/', $this->useSofDelete($fields, 'use'), $template);
 
-			file_put_contents('app/Models/' . $this->camelCase1($table->name) . '.php', $template);
+			file_put_contents('app/' . $this->camelCase1($table->name) . '.php', $template);
 
 		}
 
