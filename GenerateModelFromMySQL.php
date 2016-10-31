@@ -29,6 +29,7 @@ class GenerateModelFromMySQL extends Command
 	public function __construct()
 	{
 		parent::__construct();
+
 	}
 
 	/**
@@ -74,6 +75,10 @@ class GenerateModelFromMySQL extends Command
 			exit();
 		}
 
+		//Create 'Models' directory it does not already exist
+		if (!file_exists('app/Models'))
+			mkdir('app/Models', 0777, true);
+
 		foreach ($tables AS $table)
 		{
 			$template = $this->template();
@@ -87,8 +92,10 @@ class GenerateModelFromMySQL extends Command
 			$template = preg_replace('/#FILLABLE#/', $this->generateFillable($fields), $template);
 			$template = preg_replace('/#SOLO_RELATIONAL_FUNCTIONS#/', $this->GenerateSoloRelations($solo_relations), $template);
 			$template = preg_replace('/#MULTI_RELATIONAL_FUNCTIONS#/', $this->GenerateMultiRelations($multi_relations), $template);
+			$template = preg_replace('/#IMPORT_SOFT_DELETE#/', $this->useSofDelete($fields, 'import'), $template);
+			$template = preg_replace('/#USE_SOFT_DELETE#/', $this->useSofDelete($fields, 'use'), $template);
 
-			file_put_contents('app/' . $this->camelCase1($table->name) . '.php', $template);
+			file_put_contents('app/Models/' . $this->camelCase1($table->name) . '.php', $template);
 
 		}
 
@@ -118,6 +125,27 @@ class GenerateModelFromMySQL extends Command
 		return [
 			//['example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null],
 		];
+	}
+
+	protected function useSofDelete($table_fields, $option)
+	{
+		$softDelete= false;
+		foreach ($table_fields AS $field)
+		{
+			if($field->COLUMN_NAME == 'deleted_at')
+				$softDelete= true;
+		}
+
+		$fillable= '';
+		switch ($option){
+			case 'import':
+				$fillable= 'use Illuminate\Database\Eloquent\SoftDeletes;';
+				break;
+			case 'use':
+				$fillable= 'use SoftDeletes;';
+				break;
+		}
+		return ($softDelete)? $fillable : '';
 	}
 
 	private function getMatchingTables($database, $table)
@@ -228,7 +256,7 @@ class GenerateModelFromMySQL extends Command
 		//Field comments, if available
 		foreach ($table_fields AS $field)
 		{
-			if($field->COLUMN_NAME == 'id')
+			if($field->COLUMN_NAME == 'id' || $field->COLUMN_NAME == 'deleted_at')
 				$fillable .= "\t\t\t\t//'{$field->COLUMN_NAME}',";
 			else
 				$fillable .= "\t\t\t\t'{$field->COLUMN_NAME}',";
@@ -249,8 +277,11 @@ class GenerateModelFromMySQL extends Command
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+#IMPORT_SOFT_DELETE#
 
 class #CLASS_NAME# extends Model {
+
+	#USE_SOFT_DELETE#
 
 	protected $table = \'#TABLE_NAME#\';
 	public $timestamps = false ;
