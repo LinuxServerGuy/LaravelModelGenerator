@@ -141,9 +141,11 @@ class GenerateModelFromMySQL extends Command
 			."#SOLO_RELATIONAL_FUNCTIONS#\n\n#MULTI_RELATIONAL_FUNCTIONS#\n}";
 		$template= preg_replace("/protected \$fillable(.*)\;/", "#FILLABLE#", $template);
 		
+		$template= str_replace('use Illuminate\Database\Eloquent\SoftDeletes;', '', $template);
+		$template= str_replace("use SoftDeletes;", "", $template);
+		$template = $this->str_replace_first("\nclass ", "#IMPORT_SOFT_DELETE#\n\nclass", $template);
+		$template = $this->str_replace_first("{", "{\n\n#USE_SOFT_DELETE#\nprotected", $template);
 
-		//$template = preg_replace('/#CLASS_NAME#/', $this->camelCase1($table->name), $template);
-		//$template = preg_replace('/#TABLE_NAME#/', $table->name, $template);
 		$template = preg_replace('/#FILLABLE#/', $this->generateFillable($fields), $template);
 		$template = preg_replace('/#SOLO_RELATIONAL_FUNCTIONS#/', $this->GenerateSoloRelations($solo_relations), $template);
 		$template = preg_replace('/#MULTI_RELATIONAL_FUNCTIONS#/', $this->GenerateMultiRelations($multi_relations), $template);
@@ -294,6 +296,13 @@ class GenerateModelFromMySQL extends Command
 		$fillable .= "\t\t\t\t]";
 
 		return $fillable;
+	}
+
+	private function str_replace_first($from, $to, $subject)
+	{
+		$from = '/'.preg_quote($from, '/').'/';
+
+		return preg_replace($from, $to, $subject, 1);
 	}
 
 	private function template()
