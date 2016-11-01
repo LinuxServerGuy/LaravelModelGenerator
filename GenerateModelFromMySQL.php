@@ -91,6 +91,10 @@ class GenerateModelFromMySQL extends Command
 			$template = preg_replace('/#IMPORT_SOFT_DELETE#/', $this->useSofDelete($fields, 'import'), $template);
 			$template = preg_replace('/#USE_SOFT_DELETE#/', $this->useSofDelete($fields, 'use'), $template);
 
+			if ($table->name == 'user'){
+				$template_user= $this->getUserTable($database_name, $table);
+				$template= (!$template_user)? $template : $template_user;
+			}
 			file_put_contents('app/' . $this->camelCase1($table->name) . '.php', $template);
 
 		}
@@ -121,6 +125,32 @@ class GenerateModelFromMySQL extends Command
 		return [
 			//['example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null],
 		];
+	}
+
+	protected function getUserTable($database_name, $table)
+	{
+		if (!file_exists('app/User.php')) return false;
+
+		$original = file_get_contents('app/User.php');
+
+		$fields          = $this->getTableFields($database_name, $table->name);
+		$solo_relations  = $this->getTableFieldsSoloRelations($database_name, $table->name);
+		$multi_relations = $this->getTableFieldsMultiRelations($database_name, $table->name);
+
+		$template= rtrim(trim(preg_replace("/public function [a-zA-Z0-9_]{1,}\(\)\n[ \t]{1,}{\n.+\n[ \t]{1,}\}\n\n/", "", $original)), '}')
+			."#SOLO_RELATIONAL_FUNCTIONS#\n\n#MULTI_RELATIONAL_FUNCTIONS#\n}";
+		$template= preg_replace("/protected \$fillable(.*)\;/", "#FILLABLE#", $template);
+		
+
+		//$template = preg_replace('/#CLASS_NAME#/', $this->camelCase1($table->name), $template);
+		//$template = preg_replace('/#TABLE_NAME#/', $table->name, $template);
+		$template = preg_replace('/#FILLABLE#/', $this->generateFillable($fields), $template);
+		$template = preg_replace('/#SOLO_RELATIONAL_FUNCTIONS#/', $this->GenerateSoloRelations($solo_relations), $template);
+		$template = preg_replace('/#MULTI_RELATIONAL_FUNCTIONS#/', $this->GenerateMultiRelations($multi_relations), $template);
+		$template = preg_replace('/#IMPORT_SOFT_DELETE#/', $this->useSofDelete($fields, 'import'), $template);
+		$template = preg_replace('/#USE_SOFT_DELETE#/', $this->useSofDelete($fields, 'use'), $template);
+
+		return $template;
 	}
 
 	protected function useSofDelete($table_fields, $option)
