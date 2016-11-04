@@ -75,10 +75,6 @@ class GenerateModelFromMySQL extends Command
 			exit();
 		}
 
-		//Create 'Models' directory it does not already exist
-		if (!file_exists('app/Models'))
-			mkdir('app/Models', 0777, true);
-
 		foreach ($tables AS $table)
 		{
 			$template = $this->template();
@@ -95,7 +91,11 @@ class GenerateModelFromMySQL extends Command
 			$template = preg_replace('/#IMPORT_SOFT_DELETE#/', $this->useSofDelete($fields, 'import'), $template);
 			$template = preg_replace('/#USE_SOFT_DELETE#/', $this->useSofDelete($fields, 'use'), $template);
 
-			file_put_contents('app/Models/' . $this->camelCase1($table->name) . '.php', $template);
+			if ($table->name == 'user'){
+				$template_user= $this->getUserTable($database_name, $table);
+				$template= (!$template_user)? $template : $template_user;
+			}
+			file_put_contents('app/' . $this->camelCase1($table->name) . '.php', $template);
 
 		}
 
@@ -125,6 +125,34 @@ class GenerateModelFromMySQL extends Command
 		return [
 			//['example', null, InputOption::VALUE_OPTIONAL, 'An example option.', null],
 		];
+	}
+
+	protected function getUserTable($database_name, $table)
+	{
+		if (!file_exists('app/User.php')) return false;
+
+		$original = file_get_contents('app/User.php');
+
+		$fields          = $this->getTableFields($database_name, $table->name);
+		$solo_relations  = $this->getTableFieldsSoloRelations($database_name, $table->name);
+		$multi_relations = $this->getTableFieldsMultiRelations($database_name, $table->name);
+
+		$template= rtrim(trim(preg_replace("/public function [a-zA-Z0-9_]{1,}\(\)\n[ \t]{1,}{\n.+\n[ \t]{1,}\}\n\n/", "", $original)), '}')
+			."#SOLO_RELATIONAL_FUNCTIONS#\n\n#MULTI_RELATIONAL_FUNCTIONS#\n}";
+		$template= preg_replace("/protected \$fillable(.*)\;/", "#FILLABLE#", $template);
+		
+		$template= str_replace('use Illuminate\Database\Eloquent\SoftDeletes;', '', $template);
+		$template= str_replace("use SoftDeletes;", "", $template);
+		$template = $this->str_replace_first("\nclass ", "#IMPORT_SOFT_DELETE#\n\nclass", $template);
+		$template = $this->str_replace_first("{", "{\n\n#USE_SOFT_DELETE#\nprotected", $template);
+
+		$template = preg_replace('/#FILLABLE#/', $this->generateFillable($fields), $template);
+		$template = preg_replace('/#SOLO_RELATIONAL_FUNCTIONS#/', $this->GenerateSoloRelations($solo_relations), $template);
+		$template = preg_replace('/#MULTI_RELATIONAL_FUNCTIONS#/', $this->GenerateMultiRelations($multi_relations), $template);
+		$template = preg_replace('/#IMPORT_SOFT_DELETE#/', $this->useSofDelete($fields, 'import'), $template);
+		$template = preg_replace('/#USE_SOFT_DELETE#/', $this->useSofDelete($fields, 'use'), $template);
+
+		return $template;
 	}
 
 	protected function useSofDelete($table_fields, $option)
@@ -268,6 +296,13 @@ class GenerateModelFromMySQL extends Command
 		$fillable .= "\t\t\t\t]";
 
 		return $fillable;
+	}
+
+	private function str_replace_first($from, $to, $subject)
+	{
+		$from = '/'.preg_quote($from, '/').'/';
+
+		return preg_replace($from, $to, $subject, 1);
 	}
 
 	private function template()
