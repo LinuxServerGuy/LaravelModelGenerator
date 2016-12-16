@@ -47,6 +47,8 @@ class GenerateModelFromMySQL extends Command
 		}
 		$database_name = $matches[1];
 		$table_name    = $matches[2];
+		//TODO
+		//$connection_name = $matches[3] ;
 
 		//Match the tables
 		$tables = $this->getMatchingTables($database_name, $table_name);
