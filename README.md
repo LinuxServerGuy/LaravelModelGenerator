@@ -3,8 +3,8 @@
 
 Use composer to create the stub with
 ```
-composer make:console GenerateModelFromMySQL
-composer make:console GenerateMigrationFromMySQL
+php artisan make:command GenerateModelFromMySQL
+php artisan make:command GenerateMigrationFromMySQL
 ```
 
 Copy GenerateModelFromMySQL.php and GenerateMigrationFromMySQL.php to app/Console/Commands/
