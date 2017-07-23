@@ -288,9 +288,9 @@ class GenerateModelFromMySQL extends Command
 		foreach ($table_fields AS $field)
 		{
 			if($field->COLUMN_NAME == 'id' || $field->COLUMN_NAME == 'deleted_at')
-				$fillable .= "\t\t\t\t//'{$field->COLUMN_NAME}',";
+				$fillable .= "\t\t\t\t//'{$field->COLUMN_NAME}', //({$field->COLUMN_TYPE})";
 			else
-				$fillable .= "\t\t\t\t'{$field->COLUMN_NAME}',";
+				$fillable .= "\t\t\t\t'{$field->COLUMN_NAME}', //({$field->COLUMN_TYPE})";
 			if (!empty($field->COLUMN_COMMENT))
 				$fillable .= "\t/*{$field->COLUMN_COMMENT}*/";
 			$fillable .= "\n";
