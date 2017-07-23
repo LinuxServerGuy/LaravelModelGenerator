@@ -206,14 +206,23 @@ class GenerateModelFromMySQL extends Command
 		$multi_relations = "\n/**  Many-to-One Relations  **/\n\n";
 
 		//Need to apply extra logic for multiple fields mapping to the same tables
-		foreach($fields AS $field)
-		{
-			dd($field) ;
-		}
-		die() ;
 		foreach ($fields AS $field)
 		{
-			$camel_field = $this->camelCase1($field->TABLE_NAME);
+			$duplicate_fk_names = false ;
+			$unique = array() ;
+			foreach($fields AS $field)
+			{
+				if(isset($unique[$field]))
+				{
+					$duplicate_fk_names = true ;
+					break;
+				}
+			}
+			if($duplicate_fk_names)
+				$camel_field = $this->camelCase1($field->COLUMN_NAME) . $this->camelCase1($field->TABLE_NAME);
+			else
+				$camel_field = $this->camelCase1($field->TABLE_NAME);
+
 			$multi_relations .= "\tpublic function {$camel_field}s()
 \t{
 \t\treturn \$this->hasMany('App\\{$camel_field}', '{$field->COLUMN_NAME}', '{$field->REFERENCED_COLUMN_NAME}');
