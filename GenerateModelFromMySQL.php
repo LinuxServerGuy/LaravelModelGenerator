@@ -210,9 +210,9 @@ class GenerateModelFromMySQL extends Command
 		{
 			$duplicate_fk_names = false ;
 			$unique = array() ;
-			foreach($fields AS $field)
+			foreach($fields AS $duplicate_field)
 			{
-				if(isset($unique[$field]))
+				if(isset($unique[$duplicate_field]))
 				{
 					$duplicate_fk_names = true ;
 					break;
