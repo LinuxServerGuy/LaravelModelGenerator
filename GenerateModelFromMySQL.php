@@ -135,16 +135,16 @@ class GenerateModelFromMySQL extends Command
 
 		$original = file_get_contents('app/User.php');
 
-		$fields          = $this->getTableFields($database_name, $table->name);
-		$solo_relations  = $this->getTableFieldsSoloRelations($database_name, $table->name);
+		$fields = $this->getTableFields($database_name, $table->name);
+		$solo_relations = $this->getTableFieldsSoloRelations($database_name, $table->name);
 		$multi_relations = $this->getTableFieldsMultiRelations($database_name, $table->name);
 
-		$template= rtrim(trim(preg_replace("/public function [a-zA-Z0-9_]{1,}\(\)\n[ \t]{1,}{\n.+\n[ \t]{1,}\}\n\n/", "", $original)), '}')
-			."#SOLO_RELATIONAL_FUNCTIONS#\n\n#MULTI_RELATIONAL_FUNCTIONS#\n}";
-		$template= preg_replace("/protected \$fillable(.*)\;/", "#FILLABLE#", $template);
-		
-		$template= str_replace('use Illuminate\Database\Eloquent\SoftDeletes;', '', $template);
-		$template= str_replace("use SoftDeletes;", "", $template);
+		$template = rtrim(trim(preg_replace("/public function [a-zA-Z0-9_]{1,}\(\)\n[ \t]{1,}{\n.+\n[ \t]{1,}\}\n\n/", "", $original)), '}')
+			. "#SOLO_RELATIONAL_FUNCTIONS#\n\n#MULTI_RELATIONAL_FUNCTIONS#\n}";
+		$template = preg_replace("/protected \$fillable(.*)\;/", "#FILLABLE#", $template);
+
+		$template = str_replace('use Illuminate\Database\Eloquent\SoftDeletes;', '', $template);
+		$template = str_replace("use SoftDeletes;", "", $template);
 		$template = $this->str_replace_first("\nclass ", "#IMPORT_SOFT_DELETE#\n\nclass", $template);
 		$template = $this->str_replace_first("{", "{\n\n#USE_SOFT_DELETE#\nprotected", $template);
 
