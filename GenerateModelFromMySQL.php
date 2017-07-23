@@ -29,7 +29,6 @@ class GenerateModelFromMySQL extends Command
 	public function __construct()
 	{
 		parent::__construct();
-
 	}
 
 	/**
@@ -39,16 +38,16 @@ class GenerateModelFromMySQL extends Command
 	 */
 	public function fire()
 	{
-		preg_match('/(.+)\.(.+)/', $this->argument('database_table'), $matches);
-		if (empty($matches[1]) || empty($matches[2]))
+		preg_match('/((.+)\.)?(.+)/', $this->argument('database_table'), $matches);
+		if(empty($matches[2]))
+			$matches[2] = env('DB_DATABASE') ;	//No longer require the database name to be provided
+		if (empty($matches[2]) || empty($matches[3]))
 		{
 			$this->error('Please enter a valid Database/Table.');
 			exit();
 		}
-		$database_name = $matches[1];
-		$table_name    = $matches[2];
-		//TODO
-		//$connection_name = $matches[3] ;
+		$database_name = $matches[2];
+		$table_name    = $matches[3];
 
 		//Match the tables
 		$tables = $this->getMatchingTables($database_name, $table_name);
@@ -206,6 +205,12 @@ class GenerateModelFromMySQL extends Command
 	{
 		$multi_relations = "\n/**  Many-to-One Relations  **/\n\n";
 
+		//Need to apply extra logic for multiple fields mapping to the same tables
+		foreach($fields AS $field)
+		{
+			dd($field) ;
+		}
+		die() ;
 		foreach ($fields AS $field)
 		{
 			$camel_field = $this->camelCase1($field->TABLE_NAME);
