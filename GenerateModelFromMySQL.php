@@ -212,20 +212,21 @@ class GenerateModelFromMySQL extends Command
 			$unique = array() ;
 			foreach($fields AS $duplicate_field)
 			{
-				if(isset($unique[$duplicate_field]))
+				if(isset($unique[$duplicate_field->REFERENCED_TABLE_NAME]))
 				{
 					$duplicate_fk_names = true ;
 					break;
 				}
+				$unique[$duplicate_field->REFERENCED_TABLE_NAME] = '';
 			}
 			if($duplicate_fk_names)
-				$camel_field = $this->camelCase1($field->COLUMN_NAME) . $this->camelCase1($field->TABLE_NAME);
+				$relation_name = $this->camelCase1($this->stripFkId($field->COLUMN_NAME)) . $this->camelCase1($field->TABLE_NAME);
 			else
-				$camel_field = $this->camelCase1($field->TABLE_NAME);
+				$relation_name = $this->camelCase1($field->TABLE_NAME);
 
-			$multi_relations .= "\tpublic function {$camel_field}s()
+			$multi_relations .= "\tpublic function {$relation_name}s()
 \t{
-\t\treturn \$this->hasMany('App\\{$camel_field}', '{$field->COLUMN_NAME}', '{$field->REFERENCED_COLUMN_NAME}');
+\t\treturn \$this->hasMany('App\\{$this->camelCase1($field->TABLE_NAME)}', '{$field->COLUMN_NAME}', '{$field->REFERENCED_COLUMN_NAME}');
 \t}\n\n";
 		}
 		return $multi_relations;
@@ -256,6 +257,14 @@ class GenerateModelFromMySQL extends Command
 		$string = lcfirst($string);
 
 		return $string;
+	}
+
+	private function stripFkId($string)
+	{
+		$string = preg_replace('/^fk_/', '', $string) ;
+		$string = preg_replace('/_id$/', '', $string) ;
+
+		return $string ;
 	}
 
 	private function getTableFields($database, $table)
