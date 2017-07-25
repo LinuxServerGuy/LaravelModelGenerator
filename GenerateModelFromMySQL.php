@@ -39,8 +39,8 @@ class GenerateModelFromMySQL extends Command
 	public function fire()
 	{
 		preg_match('/((.+)\.)?(.+)/', $this->argument('database_table'), $matches);
-		if(empty($matches[2]))
-			$matches[2] = env('DB_DATABASE') ;	//No longer require the database name to be provided
+		if (empty($matches[2]))
+			$matches[2] = env('DB_DATABASE');    //No longer require the database name to be provided
 		if (empty($matches[2]) || empty($matches[3]))
 		{
 			$this->error('Please enter a valid Database/Table.');
@@ -52,7 +52,7 @@ class GenerateModelFromMySQL extends Command
 		//Match the tables
 		$tables = $this->getMatchingTables($database_name, $table_name);
 
-		if(count($tables) == 0)
+		if (count($tables) == 0)
 		{
 			$this->error('Error: No tables found that match your argument: ' . $table_name);
 			exit();
@@ -92,9 +92,10 @@ class GenerateModelFromMySQL extends Command
 			$template = preg_replace('/#IMPORT_SOFT_DELETE#/', $this->useSofDelete($fields, 'import'), $template);
 			$template = preg_replace('/#USE_SOFT_DELETE#/', $this->useSofDelete($fields, 'use'), $template);
 
-			if ($table->name == 'user'){
-				$template_user= $this->getUserTable($database_name, $table);
-				$template= (!$template_user)? $template : $template_user;
+			if ($table->name == 'user')
+			{
+				$template_user = $this->getUserTable($database_name, $table);
+				$template      = (!$template_user) ? $template : $template_user;
 			}
 			file_put_contents('app/' . $this->camelCase1($table->name) . '.php', $template);
 
@@ -134,8 +135,8 @@ class GenerateModelFromMySQL extends Command
 
 		$original = file_get_contents('app/User.php');
 
-		$fields = $this->getTableFields($database_name, $table->name);
-		$solo_relations = $this->getTableFieldsSoloRelations($database_name, $table->name);
+		$fields          = $this->getTableFields($database_name, $table->name);
+		$solo_relations  = $this->getTableFieldsSoloRelations($database_name, $table->name);
 		$multi_relations = $this->getTableFieldsMultiRelations($database_name, $table->name);
 
 		$template = rtrim(trim(preg_replace("/public function [a-zA-Z0-9_]{1,}\(\)\n[ \t]{1,}{\n.+\n[ \t]{1,}\}\n\n/", "", $original)), '}')
@@ -158,23 +159,24 @@ class GenerateModelFromMySQL extends Command
 
 	protected function useSofDelete($table_fields, $option)
 	{
-		$softDelete= false;
+		$softDelete = false;
 		foreach ($table_fields AS $field)
 		{
-			if($field->COLUMN_NAME == 'deleted_at')
-				$softDelete= true;
+			if ($field->COLUMN_NAME == 'deleted_at')
+				$softDelete = true;
 		}
 
-		$fillable= '';
-		switch ($option){
+		$fillable = '';
+		switch ($option)
+		{
 			case 'import':
-				$fillable= 'use Illuminate\Database\Eloquent\SoftDeletes;';
+				$fillable = 'use Illuminate\Database\Eloquent\SoftDeletes;';
 				break;
 			case 'use':
-				$fillable= 'use SoftDeletes;';
+				$fillable = 'use SoftDeletes;';
 				break;
 		}
-		return ($softDelete)? $fillable : '';
+		return ($softDelete) ? $fillable : '';
 	}
 
 	private function getMatchingTables($database, $table)
@@ -190,9 +192,21 @@ class GenerateModelFromMySQL extends Command
 	{
 		$solo_relations = "\n/**  One-to-Many Relations  **/\n\n";
 
+		$unique = [];
 		foreach ($fields AS $field)
 		{
-			$camel_field = $this->camelCase1($field->REFERENCED_TABLE_NAME);
+			if(!isset($unique[$field->REFERENCED_TABLE_NAME])) $unique[$field->REFERENCED_TABLE_NAME] = 0 ;
+			$unique[$field->REFERENCED_TABLE_NAME]++;
+			echo $field->REFERENCED_TABLE_NAME . '=' . $unique[$field->REFERENCED_TABLE_NAME];
+		}
+
+		foreach ($fields AS $field)
+		{
+			if ($unique[$field->REFERENCED_TABLE_NAME] > 1)
+				$camel_field = $this->camelCase1($this->stripFkId($field->COLUMN_NAME));
+			else
+				$camel_field = $this->camelCase1($field->REFERENCED_TABLE_NAME);
+
 			$solo_relations .= "\tpublic function {$camel_field}()
 \t{
 \t\treturn \$this->hasOne('App\\{$camel_field}', '{$field->REFERENCED_COLUMN_NAME}', '{$field->COLUMN_NAME}');
@@ -206,20 +220,17 @@ class GenerateModelFromMySQL extends Command
 		$multi_relations = "\n/**  Many-to-One Relations  **/\n\n";
 
 		//Need to apply extra logic for multiple fields mapping to the same tables
+		$unique = [] ;
+		foreach($fields AS $field)
+		{
+			if (!isset($unique[$field->TABLE_NAME])) $unique[$field->TABLE_NAME] = 0;
+			$unique[$field->TABLE_NAME]++ ;
+			echo $field->TABLE_NAME . '=' . $unique[$field->TABLE_NAME] ;
+		}
+
 		foreach ($fields AS $field)
 		{
-			$duplicate_fk_names = false ;
-			$unique = array() ;
-			foreach($fields AS $duplicate_field)
-			{
-				if(isset($unique[$duplicate_field->REFERENCED_TABLE_NAME]))
-				{
-					$duplicate_fk_names = true ;
-					break;
-				}
-				$unique[$duplicate_field->REFERENCED_TABLE_NAME] = '';
-			}
-			if($duplicate_fk_names)
+			if ($unique[$field->TABLE_NAME] > 1)
 				$relation_name = $this->camelCase1($this->stripFkId($field->COLUMN_NAME)) . $this->camelCase1($field->TABLE_NAME);
 			else
 				$relation_name = $this->camelCase1($field->TABLE_NAME);
@@ -231,6 +242,7 @@ class GenerateModelFromMySQL extends Command
 		}
 		return $multi_relations;
 	}
+
 
 	//Camel case with init cap
 	private function camelCase1($string, array $noStrip = [])
@@ -261,10 +273,10 @@ class GenerateModelFromMySQL extends Command
 
 	private function stripFkId($string)
 	{
-		$string = preg_replace('/^fk_/', '', $string) ;
-		$string = preg_replace('/_id$/', '', $string) ;
+		$string = preg_replace('/^fk_/', '', $string);
+		$string = preg_replace('/_id$/', '', $string);
 
-		return $string ;
+		return $string;
 	}
 
 	private function getTableFields($database, $table)
@@ -310,7 +322,7 @@ class GenerateModelFromMySQL extends Command
 		//Field comments, if available
 		foreach ($table_fields AS $field)
 		{
-			if($field->COLUMN_NAME == 'id' || $field->COLUMN_NAME == 'deleted_at')
+			if ($field->COLUMN_NAME == 'id' || $field->COLUMN_NAME == 'deleted_at')
 				$fillable .= "\t\t\t\t//'{$field->COLUMN_NAME}', //({$field->COLUMN_TYPE})";
 			else
 				$fillable .= "\t\t\t\t'{$field->COLUMN_NAME}', //({$field->COLUMN_TYPE})";
@@ -326,7 +338,7 @@ class GenerateModelFromMySQL extends Command
 
 	private function str_replace_first($from, $to, $subject)
 	{
-		$from = '/'.preg_quote($from, '/').'/';
+		$from = '/' . preg_quote($from, '/') . '/';
 
 		return preg_replace($from, $to, $subject, 1);
 	}
